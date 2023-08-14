@@ -34,7 +34,7 @@ func (h *Handler) CreateTask(ctx *fiber.Ctx) error {
 		h.logger.Error(err.Error())
 
 		if errors.Is(err, service.ErrInvalidDate) || errors.Is(err, service.ErrInvalidTitle) {
-			return sendResponse(ctx, fiber.StatusBadRequest, errors.Unwrap(err).Error())
+			return sendResponse(ctx, fiber.StatusBadRequest, err.Error())
 		}
 
 		return sendResponse(ctx, fiber.StatusInternalServerError, errors.Unwrap(err).Error())
@@ -46,9 +46,6 @@ func (h *Handler) CreateTask(ctx *fiber.Ctx) error {
 
 func (h *Handler) UpdateTask(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
-	if id == "" {
-		return sendResponse(ctx, fiber.StatusBadRequest, storage.ErrInvalidId.Error())
-	}
 
 	var todo models.ToDo
 	todo.ID = id
@@ -73,7 +70,7 @@ func (h *Handler) UpdateTask(ctx *fiber.Ctx) error {
 		h.logger.Error(err.Error())
 
 		if errors.Is(err, service.ErrInvalidDate) || errors.Is(err, service.ErrInvalidTitle) || errors.Is(err, storage.ErrInvalidId) {
-			return sendResponse(ctx, fiber.StatusBadRequest, errors.Unwrap(err).Error())
+			return sendResponse(ctx, fiber.StatusBadRequest, err.Error())
 		}
 		return sendResponse(ctx, fiber.StatusInternalServerError, errors.Unwrap(err).Error())
 	}
@@ -84,15 +81,12 @@ func (h *Handler) UpdateTask(ctx *fiber.Ctx) error {
 
 func (h *Handler) DeleteTask(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
-	if id == "" {
-		return sendResponse(ctx, fiber.StatusBadRequest, storage.ErrInvalidId.Error())
-	}
 
 	res, err := h.service.DeleteTask(id)
 	if err != nil {
 		h.logger.Error(err.Error())
 		if errors.Is(err, storage.ErrInvalidId) {
-			return sendResponse(ctx, fiber.StatusBadRequest, errors.Unwrap(err).Error())
+			return sendResponse(ctx, fiber.StatusBadRequest, err.Error())
 		}
 		return sendResponse(ctx, fiber.StatusInternalServerError, errors.Unwrap(err).Error())
 	}
@@ -103,16 +97,13 @@ func (h *Handler) DeleteTask(ctx *fiber.Ctx) error {
 
 func (h *Handler) MakeTaskDone(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
-	if id == "" {
-		return sendResponse(ctx, fiber.StatusBadRequest, storage.ErrInvalidId.Error())
-	}
 
 	res, err := h.service.MakeTaskDone(id)
 	if err != nil {
 		h.logger.Error(err.Error())
 
 		if errors.Is(err, storage.ErrInvalidId) {
-			return sendResponse(ctx, fiber.StatusBadRequest, errors.Unwrap(err).Error())
+			return sendResponse(ctx, fiber.StatusBadRequest, err.Error())
 		}
 
 		return sendResponse(ctx, fiber.StatusInternalServerError, errors.Unwrap(err).Error())
