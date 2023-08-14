@@ -118,3 +118,15 @@ func (h *Handler) MakeTaskDone(ctx *fiber.Ctx) error {
 	h.logger.Info(fmt.Sprintf("updated status count is %d", res))
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
+
+func (h *Handler) TaskList(ctx *fiber.Ctx) error {
+	status := ctx.Query("status", "active")
+
+	todoList, err := h.service.TaskList(status)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return sendResponse(ctx, fiber.StatusInternalServerError, errors.Unwrap(err).Error())
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(todoList)
+}

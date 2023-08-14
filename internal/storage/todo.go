@@ -8,6 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"time"
 )
 
 const path = "storage.todo."
@@ -89,7 +91,45 @@ func (t ToDoStore) MakeTaskDone(id string) (int64, error) {
 	return res.ModifiedCount, nil
 }
 
-func (t ToDoStore) TaskList(s string) ([]models.ToDo, error) {
-	//TODO implement me
-	panic("implement me")
+func (t ToDoStore) TaskList(status string) ([]models.ToDo, error) {
+	var filter bson.M
+
+	// если статус active, тогда возвращаем все задачи у которых activeAt <= текущего дня;
+	if status == "active" {
+		filter = bson.M{
+			"activeAt": bson.M{
+				"$lte": time.Now().Format("2006-01-02"), // $lte - выберает документы < или == указанному значению.
+			},
+			"status": bson.M{
+				"$eq": "active",
+			},
+		}
+	} else {
+		filter = bson.M{
+			"status": bson.M{
+				"$eq": "done",
+			},
+		}
+	}
+
+	// задачи должны быть отсортированы по дате создания;
+	opts := options.Find().SetSort(bson.D{{Key: "activeAt", Value: -1}}) //значение -1 сортирует документы по указанному атрибуту в порядке убывания
+
+	cur, err := t.collection.Find(context.Background(), filter, opts)
+	if err != nil {
+		return nil, fmt.Errorf("%sTaskList: %w", path, err)
+	}
+	defer cur.Close(context.Background())
+
+	todos := make([]models.ToDo, 0, cur.RemainingBatchLength())
+	for cur.Next(context.Background()) {
+		var todo models.ToDo
+		err := cur.Decode(&todo)
+		if err != nil {
+			return nil, fmt.Errorf("%sTaskList: %w", path, err)
+		}
+		todos = append(todos, todo)
+	}
+
+	return todos, nil
 }

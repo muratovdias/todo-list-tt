@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/muratovdias/todo-list-tt/internal/models"
 	"github.com/muratovdias/todo-list-tt/internal/storage"
+	"strings"
 )
 
 var (
@@ -55,7 +56,26 @@ func (t ToDoService) MakeTaskDone(id string) (int64, error) {
 	return t.store.MakeTaskDone(id)
 }
 
-func (t ToDoService) TaskList(s string) ([]models.ToDo, error) {
-	//TODO implement me
-	panic("implement me")
+func (t ToDoService) TaskList(status string) ([]models.ToDo, error) {
+	list, err := t.store.TaskList(status)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range list { // проверяем день каждого элемента в слайсе на выходной (суббота/воскресенье)
+		ok, err := isWeekend(list[i].ActiveAt)
+		if err != nil {
+			return nil, err
+		}
+
+		if ok {
+			var builder strings.Builder
+			builder.WriteString("ВЫХОДНОЙ - ")
+			builder.WriteString(list[i].Title)
+
+			list[i].Title = builder.String()
+		}
+	}
+
+	return list, nil
 }

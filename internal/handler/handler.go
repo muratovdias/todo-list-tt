@@ -33,6 +33,7 @@ func (h *Handler) Routes(cfg *config.Config) *fiber.App {
 	app.Put("/api/todo-list/tasks/:id", h.UpdateTask)
 	app.Delete("/api/todo-list/tasks/:id", h.DeleteTask)
 	app.Put("/api/todo-list/tasks/:id/done", h.MakeTaskDone)
+	app.Get("/api/todo-list/tasks", h.TaskList)
 
 	return app
 }
