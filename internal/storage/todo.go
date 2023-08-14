@@ -101,13 +101,13 @@ func (t ToDoStore) TaskList(status string) ([]models.ToDo, error) {
 				"$lte": time.Now().Format("2006-01-02"), // $lte - выберает документы < или == указанному значению.
 			},
 			"status": bson.M{
-				"$eq": "active",
+				"$eq": "active", //$eq - status == active
 			},
 		}
 	} else {
 		filter = bson.M{
 			"status": bson.M{
-				"$eq": "done",
+				"$eq": "done", //$eq - status == done
 			},
 		}
 	}
@@ -121,6 +121,7 @@ func (t ToDoStore) TaskList(status string) ([]models.ToDo, error) {
 	}
 	defer cur.Close(context.Background())
 
+	//
 	todos := make([]models.ToDo, 0, cur.RemainingBatchLength())
 	for cur.Next(context.Background()) {
 		var todo models.ToDo

@@ -18,9 +18,11 @@ func (h *Handler) CreateTask(ctx *fiber.Ctx) error {
 		return sendResponse(ctx, fiber.StatusInternalServerError, err.Error())
 	}
 
+	// удаляем все ведущие и завершающие пробелы,
 	todo.Title = strings.TrimSpace(todo.Title)
 	todo.ActiveAt = strings.TrimSpace(todo.ActiveAt)
 
+	// валидируем нашу структуру
 	if err := h.validator.Struct(todo); err != nil {
 		h.logger.Error(err.Error())
 		return sendResponse(ctx, fiber.StatusBadRequest, err.Error())
@@ -56,10 +58,11 @@ func (h *Handler) UpdateTask(ctx *fiber.Ctx) error {
 		return sendResponse(ctx, fiber.StatusInternalServerError, err.Error())
 	}
 
-	// TODO: replace validator logic into service
+	// удаляем все ведущие и завершающие пробелы,
 	todo.Title = strings.TrimSpace(todo.Title)
 	todo.ActiveAt = strings.TrimSpace(todo.ActiveAt)
 
+	// валидируем нашу структуру
 	if err := h.validator.Struct(todo); err != nil {
 		h.logger.Error(err.Error())
 		return sendResponse(ctx, fiber.StatusBadRequest, err.Error())
