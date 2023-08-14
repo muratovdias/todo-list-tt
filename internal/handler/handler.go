@@ -1,18 +1,24 @@
 package handler
 
 import (
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/muratovdias/todo-list-tt/internal/config"
 	"github.com/muratovdias/todo-list-tt/internal/service"
+	"golang.org/x/exp/slog"
 )
 
 type Handler struct {
-	service service.Service
+	service   service.Service
+	logger    *slog.Logger
+	validator *validator.Validate
 }
 
-func NewHandler(service service.Service) *Handler {
+func NewHandler(service service.Service, logger *slog.Logger) *Handler {
 	return &Handler{
-		service: service,
+		service:   service,
+		logger:    logger,
+		validator: validator.New(),
 	}
 }
 
