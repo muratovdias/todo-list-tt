@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -12,6 +13,7 @@ import (
 	"github.com/muratovdias/todo-list-tt/internal/storage"
 	"github.com/muratovdias/todo-list-tt/pkg/logger"
 	"github.com/stretchr/testify/require"
+	"io"
 	"net/http/httptest"
 	"testing"
 )
@@ -354,6 +356,84 @@ func TestHandler_MakeTaskDone(t *testing.T) {
 
 			require.NoError(t, err)
 			require.Equal(t, tt.expectedStatus, resp.StatusCode)
+		})
+	}
+}
+
+func TestHandler_TaskList(t *testing.T) {
+	type mockBehaviour func(s *mock_service.MockToDo, id string, list []models.ToDo)
+
+	testCases := []struct {
+		name             string
+		queryParam       string
+		returnedTaskList []models.ToDo
+		mockBehaviour    mockBehaviour
+		expectedStatus   int
+		expectedBody     []byte
+	}{
+		{
+			name:       "Active tasks",
+			queryParam: "active",
+			returnedTaskList: []models.ToDo{
+				{
+					ID:       "64d21e4a7ae4d05cf058fef2",
+					Title:    "Test",
+					ActiveAt: "2023-08-23",
+					Status:   "active",
+				},
+			},
+			mockBehaviour: func(s *mock_service.MockToDo, status string, list []models.ToDo) {
+				s.EXPECT().TaskList(status).Return(list, nil)
+			},
+			expectedStatus: 200,
+		},
+		{
+			name:       "Done tasks",
+			queryParam: "done",
+			returnedTaskList: []models.ToDo{
+				{
+					ID:       "64d21e4a7ae4d05cf058fef2",
+					Title:    "Test",
+					ActiveAt: "2023-08-05",
+					Status:   "done",
+				},
+			},
+			mockBehaviour: func(s *mock_service.MockToDo, status string, list []models.ToDo) {
+				s.EXPECT().TaskList(status).Return(list, nil)
+			},
+			expectedStatus: 200,
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			c := gomock.NewController(t)
+			defer c.Finish()
+
+			todo := mock_service.NewMockToDo(c)
+			tt.mockBehaviour(todo, tt.queryParam, tt.returnedTaskList)
+
+			s := service.Service{ToDo: todo}
+			lg := logger.SetupLogger()
+			handler := NewHandler(s, lg)
+			handler.validator = validator.New()
+
+			app := fiber.New()
+			app.Get("/api/todo-list/tasks", handler.TaskList)
+
+			req := httptest.NewRequest("GET", fmt.Sprintf("/api/todo-list/tasks?status=%s", tt.queryParam), nil)
+
+			resp, err := app.Test(req, -1)
+
+			tt.expectedBody, err = json.Marshal(tt.returnedTaskList)
+			require.NoError(t, err)
+
+			body, err := io.ReadAll(resp.Body)
+			require.NoError(t, err)
+
+			require.NoError(t, err)
+			require.Equal(t, tt.expectedStatus, resp.StatusCode)
+			require.Equal(t, tt.expectedBody, body)
+
 		})
 	}
 }
