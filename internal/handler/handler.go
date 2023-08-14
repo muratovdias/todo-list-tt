@@ -29,5 +29,7 @@ func (h *Handler) Routes(cfg *config.Config) *fiber.App {
 		IdleTimeout:  cfg.IdleTimeout,
 	})
 
+	app.Post("/api/todo-list/tasks", h.CreateTask)
+
 	return app
 }
