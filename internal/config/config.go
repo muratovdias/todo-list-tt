@@ -1,6 +1,11 @@
 package config
 
-import "time"
+import (
+	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/joho/godotenv"
+	"log"
+	"time"
+)
 
 const configPath = "./config/config.yaml"
 
@@ -18,4 +23,27 @@ type HttpServer struct {
 type DB struct {
 	URI  string `env:"MONGODB_URI"`
 	Name string `env:"MONGODB_NAME"`
+}
+
+func LoadConfig() *Config {
+	var cfg Config
+
+	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
+		log.Fatalf("can not read config %s", err)
+	}
+
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	var cfgDB DB
+	err = cleanenv.ReadEnv(&cfgDB)
+	if err != nil {
+		log.Fatalf("can not read db config %s", err)
+	}
+
+	cfg.DB = cfgDB
+
+	return &cfg
 }
