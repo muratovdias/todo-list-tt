@@ -69,9 +69,24 @@ func (t ToDoStore) DeleteTask(id string) (int64, error) {
 	return res.DeletedCount, nil
 }
 
-func (t ToDoStore) MakeTaskDone(s string) (int64, error) {
-	//TODO implement me
-	panic("implement me")
+func (t ToDoStore) MakeTaskDone(id string) (int64, error) {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return 0, fmt.Errorf("%sMakeTaskDone: %w", path, ErrInvalidId)
+	}
+
+	status := bson.M{
+		"$set": bson.M{
+			"status": "done",
+		},
+	}
+
+	res, err := t.collection.UpdateOne(context.Background(), bson.M{"_id": objID}, status)
+	if err != nil {
+		return 0, fmt.Errorf("%sMakeTaskDone: %w", path, err)
+	}
+
+	return res.ModifiedCount, nil
 }
 
 func (t ToDoStore) TaskList(s string) ([]models.ToDo, error) {

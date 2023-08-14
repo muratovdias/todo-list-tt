@@ -97,3 +97,24 @@ func (h *Handler) DeleteTask(ctx *fiber.Ctx) error {
 	h.logger.Info(fmt.Sprintf("deleted documnets count is %d", res))
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
+
+func (h *Handler) MakeTaskDone(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+	if id == "" {
+		return sendResponse(ctx, fiber.StatusBadRequest, storage.ErrInvalidId.Error())
+	}
+
+	res, err := h.service.MakeTaskDone(id)
+	if err != nil {
+		h.logger.Error(err.Error())
+
+		if errors.Is(err, storage.ErrInvalidId) {
+			return sendResponse(ctx, fiber.StatusBadRequest, errors.Unwrap(err).Error())
+		}
+
+		return sendResponse(ctx, fiber.StatusInternalServerError, errors.Unwrap(err).Error())
+	}
+
+	h.logger.Info(fmt.Sprintf("updated status count is %d", res))
+	return ctx.SendStatus(fiber.StatusNoContent)
+}
