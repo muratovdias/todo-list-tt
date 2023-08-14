@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/muratovdias/todo-list-tt/internal/models"
+	"github.com/muratovdias/todo-list-tt/internal/storage/mongodb"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -19,6 +20,6 @@ type Storage struct {
 
 func NewStorage(db *mongo.Database) *Storage {
 	return &Storage{
-		NewTODOStore(),
+		NewTODOStore(mongodb.CollectionToDo(db, "tasks")),
 	}
 }
