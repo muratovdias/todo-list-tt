@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/muratovdias/todo-list-tt/internal/config"
 	"github.com/muratovdias/todo-list-tt/internal/handler"
 	"github.com/muratovdias/todo-list-tt/internal/service"
@@ -19,7 +20,7 @@ func main() {
 	cfg := config.LoadConfig()
 	fmt.Println(cfg)
 
-	log := logger.SetupLogger()
+	newLogger := logger.SetupLogger()
 
 	connectDB, err := db.ConnectDB(cfg.DB)
 	defer func(client *mongo.Client, ctx context.Context) {
@@ -36,7 +37,7 @@ func main() {
 
 	newStorage := storage.NewStorage(connectDB)
 	newService := service.NewService(*newStorage)
-	newHandler := handler.NewHandler(*newService)
+	newHandler := handler.NewHandler(*newService, newLogger)
 	app := newHandler.Routes(cfg)
 
 	err = app.Listen(cfg.Address)
