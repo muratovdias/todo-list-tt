@@ -299,3 +299,61 @@ func TestHandler_DeleteTask(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_MakeTaskDone(t *testing.T) {
+	type mockBehaviour func(s *mock_service.MockToDo, id string)
+
+	testCases := []struct {
+		name           string
+		idParam        string
+		mockBehaviour  mockBehaviour
+		expectedStatus int
+	}{
+		{
+			name:    "OK",
+			idParam: "64d21e4a7ae4d05cf058fef2",
+			mockBehaviour: func(s *mock_service.MockToDo, id string) {
+				s.EXPECT().MakeTaskDone(id).Return(int64(1), nil)
+			},
+			expectedStatus: 204,
+		},
+		{
+			name:           "Empty ID",
+			mockBehaviour:  func(s *mock_service.MockToDo, id string) {},
+			expectedStatus: 404,
+		},
+		{
+			name:    "Invalid ID",
+			idParam: "test",
+			mockBehaviour: func(s *mock_service.MockToDo, id string) {
+				s.EXPECT().MakeTaskDone(id).Return(int64(0), storage.ErrInvalidId)
+			},
+			expectedStatus: 400,
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			c := gomock.NewController(t)
+			defer c.Finish()
+
+			todo := mock_service.NewMockToDo(c)
+			tt.mockBehaviour(todo, tt.idParam)
+
+			s := service.Service{ToDo: todo}
+			lg := logger.SetupLogger()
+			handler := NewHandler(s, lg)
+			handler.validator = validator.New()
+
+			app := fiber.New()
+			app.Put("/api/todo-list/tasks/:id", handler.MakeTaskDone)
+
+			req := httptest.NewRequest("PUT", fmt.Sprintf("/api/todo-list/tasks/%s", tt.idParam), nil)
+
+			resp, err := app.Test(req, -1)
+
+			require.NoError(t, err)
+			require.Equal(t, tt.expectedStatus, resp.StatusCode)
+		})
+	}
+}
