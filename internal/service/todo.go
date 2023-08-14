@@ -35,9 +35,16 @@ func (t ToDoService) CreateTask(todo models.ToDo) (string, error) {
 	return t.store.CreateTask(todo)
 }
 
-func (t ToDoService) UpdateTask(do models.ToDo) (int64, error) {
-	//TODO implement me
-	panic("implement me")
+func (t ToDoService) UpdateTask(todo models.ToDo) (int64, error) {
+	if err := validateTitle(todo.Title); err != nil {
+		return 0, fmt.Errorf("service.CreateTask: %w", err)
+	}
+
+	if err := validateDate(todo.ActiveAt); err != nil {
+		return 0, fmt.Errorf("service.CreateTask: %w", err)
+	}
+
+	return t.store.UpdateTask(todo)
 }
 
 func (t ToDoService) DeleteTask(s string) (int64, error) {
