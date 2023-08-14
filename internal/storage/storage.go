@@ -1,6 +1,9 @@
 package storage
 
-import "github.com/muratovdias/todo-list-tt/internal/models"
+import (
+	"github.com/muratovdias/todo-list-tt/internal/models"
+	"go.mongodb.org/mongo-driver/mongo"
+)
 
 type ToDo interface {
 	CreateTask(models.ToDo) (string, error)
@@ -12,4 +15,10 @@ type ToDo interface {
 
 type Storage struct {
 	ToDo
+}
+
+func NewStorage(db *mongo.Database) *Storage {
+	return &Storage{
+		NewTODOStore(),
+	}
 }
