@@ -121,7 +121,7 @@ func (t ToDoStore) TaskList(status string) ([]models.ToDo, error) {
 	}
 	defer cur.Close(context.Background())
 
-	//
+	// чтобы избежать лишних аллокации памяти, заранее определяем длину и емкость слайса, RemainingBatchLength() - возвращает количество документов
 	todos := make([]models.ToDo, 0, cur.RemainingBatchLength())
 	for cur.Next(context.Background()) {
 		var todo models.ToDo
