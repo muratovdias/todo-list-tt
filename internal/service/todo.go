@@ -47,9 +47,8 @@ func (t ToDoService) UpdateTask(todo models.ToDo) (int64, error) {
 	return t.store.UpdateTask(todo)
 }
 
-func (t ToDoService) DeleteTask(s string) (int64, error) {
-	//TODO implement me
-	panic("implement me")
+func (t ToDoService) DeleteTask(id string) (int64, error) {
+	return t.store.DeleteTask(id)
 }
 
 func (t ToDoService) MakeTaskDone(s string) (int64, error) {
